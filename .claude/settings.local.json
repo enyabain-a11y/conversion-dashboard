@@ -16,7 +16,29 @@
       "Bash(py -m pip install playwright -q 2>&1 | tail -2 && py -m playwright install chromium 2>&1 | tail -3)",
       "Bash(py -c \"\nfrom playwright.sync_api import sync_playwright\n\nwith sync_playwright\\(\\) as p:\n    browser = p.chromium.launch\\(headless=True\\)\n    page = browser.new_page\\(\\)\n    page.set_viewport_size\\({'width': 1400, 'height': 900}\\)\n    page.goto\\('file:///C:/Users/EnyaBain/Stats-Report/dashboard.html'\\)\n    page.wait_for_timeout\\(2000\\)\n    page.screenshot\\(path=r'C:/Users/EnyaBain/Stats-Report/dashboard_preview.png', full_page=False\\)\n    print\\('Screenshot saved'\\)\n    browser.close\\(\\)\n\")",
       "Bash(ls *.png *.csv 2>/dev/null | head -20)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(gh auth:*)",
+      "Bash(where gh:*)",
+      "Bash(winget install:*)",
+      "Bash(cmd /c \"where gh\" 2>&1)",
+      "Bash(cmd /c \"railway --version\" 2>&1 | head -3; cmd /c \"npm install -g @railway/cli\" 2>&1 | tail -3)",
+      "Bash(npm install:*)",
+      "Bash(railway --version 2>&1)",
+      "Bash(railway login:*)",
+      "Bash(railway --help 2>&1)",
+      "Bash(/c/Users/EnyaBain/AppData/Roaming/npm/railway --version 2>&1)",
+      "Bash(node /c/Users/EnyaBain/AppData/Roaming/npm/node_modules/@railway/cli/bin/railway.js --version 2>&1)",
+      "Bash(node /c/Users/EnyaBain/AppData/Roaming/npm/node_modules/@railway/cli/bin/railway.js 2>&1 | head -10)",
+      "Bash(cat /c/Users/EnyaBain/AppData/Roaming/npm/node_modules/@railway/cli/package.json 2>/dev/null | python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(d.get\\('version'\\)\\); print\\(list\\(d.get\\('scripts',{}\\).items\\(\\)\\)[:5]\\)\")",
+      "Bash(py -c \"import json; d=json.load\\(open\\('/c/Users/EnyaBain/AppData/Roaming/npm/node_modules/@railway/cli/package.json'\\)\\); print\\(d.get\\('version'\\)\\); [print\\(k,v\\) for k,v in d.get\\('scripts',{}\\).items\\(\\)]\")",
+      "Bash(\"/c/Users/EnyaBain/AppData/Roaming/npm/node_modules/@railway/cli/bin/railway.exe\" --version 2>&1)",
+      "Bash(RAILWAY=\"/c/Users/EnyaBain/AppData/Roaming/npm/node_modules/@railway/cli/bin/railway.exe\"\n\"$RAILWAY\" login --browserless 2>&1)",
+      "Bash(cmd /c \"gh --version\" 2>&1 | head -3)",
+      "Bash(winget list:*)",
+      "Bash(git config:*)",
+      "Bash(py -c \"\nimport subprocess\nresult = subprocess.run\\(['cmdkey', '/list'], capture_output=True, text=True\\)\nlines = [l for l in result.stdout.split\\('\\\\n'\\) if 'github' in l.lower\\(\\) or 'git' in l.lower\\(\\)]\nprint\\('\\\\n'.join\\(lines[:10]\\)\\)\n\")",
+      "Bash(git remote:*)",
+      "Bash(mv dashboard.html index.html && git add -A && git commit -m \"Rename dashboard.html to index.html, fix serve entrypoint\" && git push 2>&1)"
     ]
   }
 }
