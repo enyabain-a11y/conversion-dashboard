@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.google.com)",
+      "WebFetch(domain:doc-14-68-sheets.googleusercontent.com)",
+      "Bash(curl -L --max-time 30 \"https://docs.google.com/spreadsheets/d/15dblIZqlPS_M_R4zdHi0bBoyHGwI6eC7ZvCi3jJCAZo/export?format=csv&sheet=Conversions+Dashboard\" -o /tmp/conversions_dashboard.csv)",
+      "Read(//tmp/**)",
+      "Bash(ls ~/.config/gcloud/ 2>/dev/null || echo \"no gcloud\"; ls ~/AppData/Roaming/gcloud/ 2>/dev/null || echo \"no appdata gcloud\"; python3 -c \"import gspread; print\\('gspread available'\\)\" 2>/dev/null || echo \"no gspread\"; python3 -c \"import google.oauth2; print\\('google-auth available'\\)\" 2>/dev/null || echo \"no google-auth\")",
+      "Bash(ls /c/Users/EnyaBain/AppData/Roaming/gcloud/ 2>/dev/null || echo \"not found\"; find /c/Users/EnyaBain -name \"*.json\" -path \"*google*\" 2>/dev/null | head -10; find /c/Users/EnyaBain -name \"credentials.json\" 2>/dev/null | head -5)",
+      "Bash(ping -n 2 google.com 2>&1 | head -5)",
+      "Bash(py -c \"\nimport urllib.request, ssl\nreq = urllib.request.Request\\('https://www.google.com', headers={'User-Agent': 'Mozilla/5.0'}\\)\ntry:\n    with urllib.request.urlopen\\(req, timeout=10\\) as r:\n        print\\('google.com OK:', r.status\\)\nexcept Exception as e:\n    print\\('Error:', e\\)\n\")",
+      "Bash(py -c \"\nimport urllib.request\nreq = urllib.request.Request\\('https://docs.google.com', headers={'User-Agent': 'Mozilla/5.0'}\\)\nwith urllib.request.urlopen\\(req, timeout=10\\) as r:\n    print\\('docs.google.com status:', r.status\\)\n\" 2>&1)",
+      "Bash(py -m pip install browser-cookie3 requests -q 2>&1 | tail -3)",
+      "Bash(py -c \"\nimport requests\nr = requests.get\\('https://doc-14-68-sheets.googleusercontent.com', timeout=5\\)\nprint\\(r.status_code\\)\n\" 2>&1\nping -n 2 googleusercontent.com 2>&1 | head -5)",
+      "Bash(py -m pip show playwright 2>/dev/null | head -3 || echo \"not installed\")",
+      "Bash(py -m pip install playwright -q 2>&1 | tail -2 && py -m playwright install chromium 2>&1 | tail -3)",
+      "Bash(py -c \"\nfrom playwright.sync_api import sync_playwright\n\nwith sync_playwright\\(\\) as p:\n    browser = p.chromium.launch\\(headless=True\\)\n    page = browser.new_page\\(\\)\n    page.set_viewport_size\\({'width': 1400, 'height': 900}\\)\n    page.goto\\('file:///C:/Users/EnyaBain/Stats-Report/dashboard.html'\\)\n    page.wait_for_timeout\\(2000\\)\n    page.screenshot\\(path=r'C:/Users/EnyaBain/Stats-Report/dashboard_preview.png', full_page=False\\)\n    print\\('Screenshot saved'\\)\n    browser.close\\(\\)\n\")",
+      "Bash(ls *.png *.csv 2>/dev/null | head -20)",
+      "Bash(git init:*)"
+    ]
+  }
+}

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eval to Subscription Conversion Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 12px; background: #f1f3f4; color: #202124; }
+
+  .page { max-width: 1500px; margin: 0 auto; padding: 20px; }
+
+  h1.dashboard-title {
+    background: #1e8449;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    font-style: italic;
+    padding: 10px 16px;
+    margin-bottom: 2px;
+  }
+
+  .section-header {
+    background: #1e8449;
+    color: #fff;
+    font-weight: bold;
+    font-style: italic;
+    padding: 7px 16px;
+    margin: 20px 0 6px 0;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+
+  .sub-section-header {
+    background: #a9dfbf;
+    color: #1a5276;
+    font-weight: bold;
+    font-style: italic;
+    padding: 5px 16px;
+    margin: 10px 0 4px 0;
+    font-size: 12px;
+  }
+
+  .note {
+    font-style: italic;
+    color: #555;
+    padding: 2px 4px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .label-italic { font-style: italic; font-weight: bold; font-size: 11.5px; padding: 4px 0 2px 0; color: #333; }
+
+  .card {
+    background: #fff;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    font-size: 11.5px;
+    width: 100%;
+  }
+
+  th, td {
+    border: 1px solid #d0d0d0;
+    padding: 4px 9px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  th {
+    background: #f6f8fa;
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+  }
+
+  td.lbl { text-align: left; background: #fff; font-weight: normal; min-width: 200px; }
+  td.lbl-bold { text-align: left; font-weight: bold; background: #fff; }
+  td.empty { color: #ccc; }
+  td.red { background: #e74c3c; color: #fff; font-weight: bold; }
+  td.green-cell { background: #d5f5e3; }
+  td.prev { background: #fef9e7; }
+  td.neg { color: #c0392b; }
+
+  tr.total-row td { font-weight: bold; background: #f0f0f0; }
+  tr.section-gap td { border: none; height: 6px; }
+
+  .two-panel { display: flex; gap: 20px; flex-wrap: wrap; }
+  .two-panel > .panel { flex: 1; min-width: 440px; }
+
+  .prev-label {
+    font-size: 11px; font-weight: bold; font-style: italic;
+    color: #2471a3; margin-bottom: 4px;
+  }
+  .change-label {
+    font-size: 11px; font-weight: bold;
+    margin-bottom: 4px; color: #555;
+  }
+
+  .charts-row { display: flex; gap: 20px; flex-wrap: wrap; margin: 14px 0; }
+  .chart-box { flex: 1; min-width: 380px; background: #fff; border-radius: 4px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .chart-box h3 { font-size: 12px; font-weight: bold; color: #333; margin-bottom: 8px; text-align: center; }
+  .chart-box canvas { max-height: 220px; }
+
+  .spacer { height: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1 class="dashboard-title">Eval to Subscription Conversion Dashboard</h1>
+<div style="font-size:11px; color:#666; padding: 3px 0 12px 4px;">Report date: 03/09/2026</div>
+
+<!-- Charts overview -->
+<div class="charts-row">
+  <div class="chart-box">
+    <h3>Total Evaluations by Month — TRT vs HRT</h3>
+    <canvas id="evalChart"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>Average Conversion Days (Previous Report) — TRT vs HRT</h3>
+    <canvas id="convDaysChart"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>Weekly Avg Conversion Days (Prev. Report) — TRT vs HRT</h3>
+    <canvas id="weeklyChart"></canvas>
+  </div>
+</div>
+
+<!-- ========== EVALUATIONS ========== -->
+<div class="section-header">EVALUATIONS</div>
+<div class="note">Evaluations on the Invoices Data sheet are shown in the "product (metadata)" column</div>
+<div class="note">Evaluations do not have Subscription IDs i.e Subscription column must be blank</div>
+<div class="spacer"></div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="lbl-bold" style="text-align:left">Product Quantities Sold</th>
+          <th>2025-01</th><th>2025-02</th><th>2025-03</th><th>2025-04</th><th>2025-05</th><th>2025-06</th>
+          <th>2025-07</th><th>2025-08</th><th>2025-09</th><th>2025-10</th><th>2025-11</th><th>2025-12</th>
+          <th>2026-01</th><th>2026-02</th><th>2026-03</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="lbl">FountainTRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="lbl">FountainHRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="lbl">FountainGLP Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="total-row"><td class="lbl-bold">Total Evaluations</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="spacer"></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="lbl-bold" style="text-align:left">M-o-M Growth</th>
+          <th>2025-01</th><th>2025-02</th><th>2025-03</th><th>2025-04</th><th>2025-05</th><th>2025-06</th>
+          <th>2025-07</th><th>2025-08</th><th>2025-09</th><th>2025-10</th><th>2025-11</th><th>2025-12</th>
+          <th>2026-01</th><th>2026-02</th><th>2026-03</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="lbl">TRT</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="lbl">HRT</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="lbl">GLP</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="total-row"><td class="lbl-bold">TOTAL</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========== CONVERSION RATES ========== -->
+<div class="section-header">CONVERSION RATES</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="lbl-bold" style="text-align:left; min-width:210px">Number of Evals Converted to Subscriptions</th>
+          <th>2025-01</th><th>2025-02</th><th>2025-03</th><th>2025-04</th><th>2025-05</th><th>2025-06</th>
+          <th>2025-07</th><th>2025-08</th><th>2025-09</th><th>2025-10</th><th>2025-11</th><th>2025-12</th>
+          <th>2026-01</th><th>2026-02</th><th>2026-03</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="lbl">FountainTRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="green-cell">220</td><td></td></tr>
+        <tr><td class="lbl">FountainHRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="lbl">FountainGLP Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="total-row"><td class="lbl-bold">TOTAL</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>220</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="font-style:italic;font-weight:bold;font-size:12px;padding:10px 0 6px 0;">NEW METHOD</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="lbl-bold" style="text-align:left">Conversion Rate</th>
+          <th>2025-01</th><th>2025-02</th><th>2025-03</th><th>2025-04</th><th>2025-05</th><th>2025-06</th>
+          <th>2025-07</th><th>2025-08</th><th>2025-09</th><th>2025-10</th><th>2025-11</th><th>2025-12</th>
+          <th>2026-01</th><th>2026-02</th><th>2026-03</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="lbl">FountainTRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="lbl">FountainHRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="red"></td><td class="red"></td><td></td></tr>
+        <tr><td class="lbl">FountainGLP Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="total-row"><td class="lbl-bold">TOTAL</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========== CONVERSION DAYS ========== -->
+<div class="section-header">CONVERSION DAYS</div>
+
+<div class="sub-section-header">MONTHLY BREAKDOWN</div>
+<div class="label-italic">CURRENT REPORT</div>
+
+<div class="card">
+  <div class="two-panel">
+    <!-- Current Report Monthly -->
+    <div class="panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="lbl-bold" style="text-align:left">Average Conversion Days</th>
+              <th>2025-01</th><th>2025-02</th><th>2025-03</th><th>2025-04</th><th>2025-05</th><th>2025-06</th>
+              <th>2025-07</th><th>2025-08</th><th>2025-09</th><th>2025-10</th><th>2025-11</th><th>2025-12</th>
+              <th>2026-01</th><th>2026-02</th><th>2026-03</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">FountainTRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td class="lbl">FountainHRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td class="lbl">FountainGLP Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="spacer"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="lbl-bold" style="text-align:left">Median Conversion Days</th>
+              <th>2025-01</th><th>2025-02</th><th>2025-03</th><th>2025-04</th><th>2025-05</th><th>2025-06</th>
+              <th>2025-07</th><th>2025-08</th><th>2025-09</th><th>2025-10</th><th>2025-11</th><th>2025-12</th>
+              <th>2026-01</th><th>2026-02</th><th>2026-03</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">FountainTRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td class="lbl">FountainHRT Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td class="lbl">FountainGLP Trial Checkout</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Previous Report Monthly -->
+    <div class="panel">
+      <div class="prev-label">PREVIOUS REPORT AS AT &nbsp;&nbsp; 02.16.2026</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="lbl-bold" style="text-align:left">Average Conversion Days</th>
+              <th>2025-11</th><th>2025-12</th><th>2026-01</th><th>2026-02</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">FountainTRT Trial Checkout</td><td class="prev">7.85</td><td class="prev">11.29</td><td class="prev">9.76</td><td class="prev">6.13</td></tr>
+            <tr><td class="lbl">FountainHRT Trial Checkout</td><td class="prev">18.53</td><td class="prev">16.70</td><td class="prev">9.30</td><td class="prev">2.03</td></tr>
+            <tr><td class="lbl">FountainGLP Trial Checkout</td><td class="prev"></td><td class="prev"></td><td class="prev"></td><td class="prev"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="spacer"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="lbl-bold" style="text-align:left">Median Conversion Days</th>
+              <th>2025-11</th><th>2025-12</th><th>2026-01</th><th>2026-02</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">FountainTRT Trial Checkout</td><td class="prev">9.00</td><td class="prev">11.00</td><td class="prev">8.00</td><td class="prev">6.00</td></tr>
+            <tr><td class="lbl">FountainHRT Trial Checkout</td><td class="prev">14.00</td><td class="prev">14.00</td><td class="prev">9.00</td><td class="prev">2.00</td></tr>
+            <tr><td class="lbl">FountainGLP Trial Checkout</td><td class="prev"></td><td class="prev"></td><td class="prev"></td><td class="prev"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly Breakdown -->
+<div class="sub-section-header">WEEKLY BREAKDOWN</div>
+<div class="label-italic">CURRENT REPORT &nbsp;/&nbsp; PREVIOUS REPORT AS AT 02.16.2026</div>
+
+<div class="card">
+  <div class="two-panel">
+
+    <!-- Current (empty) -->
+    <div class="panel">
+      <div class="label-italic" style="margin-bottom:6px;">Current Report</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Week Start</th>
+              <th rowspan="2">Week End</th>
+              <th colspan="2">Avg Conversion Days</th>
+              <th colspan="2">Median Conversion Days</th>
+            </tr>
+            <tr>
+              <th>TRT</th><th>HRT</th><th>TRT</th><th>HRT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>12/01/2025</td><td>12/07/2025</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>12/08/2025</td><td>12/14/2025</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>12/15/2025</td><td>12/21/2025</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>12/22/2025</td><td>12/28/2025</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>12/29/2025</td><td>01/04/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>01/05/2026</td><td>01/11/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>01/12/2026</td><td>01/18/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>01/19/2026</td><td>01/25/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>01/26/2026</td><td>02/01/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>02/02/2026</td><td>02/08/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>02/09/2026</td><td>02/15/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>02/16/2026</td><td>02/22/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>02/23/2026</td><td>03/01/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>03/02/2026</td><td>03/08/2026</td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Previous Report -->
+    <div class="panel">
+      <div class="prev-label" style="margin-bottom:6px;">Previous Report — AS AT 02.16.2026</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">Week Start</th>
+              <th rowspan="2">Week End</th>
+              <th colspan="2">Avg Conversion Days</th>
+              <th colspan="2">Median Conversion Days</th>
+            </tr>
+            <tr>
+              <th>TRT</th><th>HRT</th><th>TRT</th><th>HRT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>12/01/2025</td><td>12/07/2025</td><td class="prev">13.38</td><td class="prev">18.24</td><td class="prev">9.00</td><td class="prev">15.00</td></tr>
+            <tr><td>12/08/2025</td><td>12/14/2025</td><td class="prev">15.47</td><td class="prev">18.12</td><td class="prev">12.00</td><td class="prev">16.00</td></tr>
+            <tr><td>12/15/2025</td><td>12/21/2025</td><td class="prev neg">-0.60</td><td class="prev">15.91</td><td class="prev">14.00</td><td class="prev">14.00</td></tr>
+            <tr><td>12/22/2025</td><td>12/28/2025</td><td class="prev">15.16</td><td class="prev">13.12</td><td class="prev">13.00</td><td class="prev">12.00</td></tr>
+            <tr><td>12/29/2025</td><td>01/04/2026</td><td class="prev">13.72</td><td class="prev">15.27</td><td class="prev">10.00</td><td class="prev">13.00</td></tr>
+            <tr><td>01/05/2026</td><td>01/11/2026</td><td class="prev">10.55</td><td class="prev">11.71</td><td class="prev">8.50</td><td class="prev">10.00</td></tr>
+            <tr><td>01/12/2026</td><td>01/18/2026</td><td class="prev">9.06</td><td class="prev">11.39</td><td class="prev">8.00</td><td class="prev">10.00</td></tr>
+            <tr><td>01/19/2026</td><td>01/25/2026</td><td class="prev">8.80</td><td class="prev">8.40</td><td class="prev">7.00</td><td class="prev">8.00</td></tr>
+            <tr><td>01/26/2026</td><td>02/01/2026</td><td class="prev">7.67</td><td class="prev">3.29</td><td class="prev">7.00</td><td class="prev">2.00</td></tr>
+            <tr><td>02/02/2026</td><td>02/08/2026</td><td class="prev">6.18</td><td class="prev">2.50</td><td class="prev">6.00</td><td class="prev">2.00</td></tr>
+            <tr><td>02/09/2026</td><td>02/15/2026</td><td class="prev">4.86</td><td class="prev">1.02</td><td class="prev">5.00</td><td class="prev">1.00</td></tr>
+            <tr><td>02/16/2026</td><td>02/22/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>02/23/2026</td><td>03/01/2026</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>03/02/2026</td><td>03/08/2026</td><td></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== CONVERSION OVER TIME ========== -->
+<div class="section-header">CONVERSION OVER TIME</div>
+
+<!-- TRT -->
+<div class="sub-section-header">TRT</div>
+<div class="sub-section-header">NUMBER OF CONVERSIONS OVER TIME</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th colspan="4" style="text-align:left; font-weight:bold; background:#fff;">FountainTRT Trial Checkout</th>
+          <th colspan="8" style="text-align:center; background:#e8f4f8;">Day Range</th>
+          <th></th><th></th>
+        </tr>
+        <tr>
+          <th style="text-align:center">Eval Month</th>
+          <th>Total # Evals</th>
+          <th>Total Converted</th>
+          <th>% Converted</th>
+          <th>Neg. Days<br>(Sub Before Eval)</th>
+          <th>0</th><th>1–3</th><th>4–7</th><th>8–14</th><th>15–30</th><th>31–60</th><th>Over 61</th>
+          <th>Total</th><th>Check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2025-01</td><td>1,302</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-02</td><td>1,002</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-03</td><td>1,238</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-04</td><td>1,101</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-05</td><td>1,357</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-06</td><td>1,282</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-07</td><td>1,558</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-08</td><td>1,621</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-09</td><td>1,522</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-10</td><td>1,501</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-11</td><td>1,366</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-12</td><td>1,006</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-01</td><td>841</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-02</td><td>768</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-03</td><td>223</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HRT -->
+<div class="sub-section-header">HRT</div>
+<div class="sub-section-header">NUMBER OF CONVERSIONS OVER TIME</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th colspan="4" style="text-align:left; font-weight:bold; background:#fff;">FountainHRT Trial Checkout</th>
+          <th colspan="8" style="text-align:center; background:#e8f4f8;">Day Range</th>
+          <th></th><th></th>
+        </tr>
+        <tr>
+          <th style="text-align:center">Eval Month</th>
+          <th>Total # Evals</th>
+          <th>Total Converted</th>
+          <th>% Converted</th>
+          <th>Neg. Days<br>(Sub Before Eval)</th>
+          <th>0</th><th>1–3</th><th>4–7</th><th>8–14</th><th>15–30</th><th>31–60</th><th>Over 61</th>
+          <th>Total</th><th>Check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2025-01</td><td>586</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-02</td><td>457</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-03</td><td>663</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-04</td><td>645</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-05</td><td>872</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-06</td><td>1,471</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-07</td><td>1,265</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-08</td><td>1,313</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-09</td><td>1,209</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-10</td><td>1,732</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-11</td><td>1,690</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-12</td><td>777</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-01</td><td>838</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-02</td><td>895</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-03</td><td>289</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- GLP -->
+<div class="sub-section-header">GLP</div>
+<div class="sub-section-header">NUMBER OF CONVERSIONS OVER TIME</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th colspan="4" style="text-align:left; font-weight:bold; background:#fff;">FountainGLP Trial Checkout</th>
+          <th colspan="8" style="text-align:center; background:#e8f4f8;">Day Range</th>
+          <th></th><th></th>
+        </tr>
+        <tr>
+          <th style="text-align:center">Eval Month</th>
+          <th>Total # Evals</th>
+          <th>Total Converted</th>
+          <th>% Converted</th>
+          <th>Neg. Days<br>(Sub Before Eval)</th>
+          <th>0</th><th>1–3</th><th>4–7</th><th>8–14</th><th>15–30</th><th>31–60</th><th>Over 61</th>
+          <th>Total</th><th>Check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2025-01</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-02</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-03</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-04</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-05</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-06</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-07</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-08</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-09</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-11</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2025-12</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-01</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-02</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>2026-03</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end .page -->
+
+<script>
+const months = ['Jan-25','Feb-25','Mar-25','Apr-25','May-25','Jun-25','Jul-25','Aug-25','Sep-25','Oct-25','Nov-25','Dec-25','Jan-26','Feb-26','Mar-26'];
+const trtEvals = [1302,1002,1238,1101,1357,1282,1558,1621,1522,1501,1366,1006,841,768,223];
+const hrtEvals = [586,457,663,645,872,1471,1265,1313,1209,1732,1690,777,838,895,289];
+
+// Chart 1: Evaluations by month
+new Chart(document.getElementById('evalChart'), {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      { label: 'TRT', data: trtEvals, backgroundColor: 'rgba(52,168,83,0.75)', borderColor: '#1e8449', borderWidth: 1 },
+      { label: 'HRT', data: hrtEvals, backgroundColor: 'rgba(66,133,244,0.75)', borderColor: '#1a73e8', borderWidth: 1 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+    scales: { x: { ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } }
+  }
+});
+
+// Chart 2: Monthly Avg Conversion Days (previous report)
+const prevMonths = ['Nov-25','Dec-25','Jan-26','Feb-26'];
+const trtAvg = [7.85, 11.29, 9.76, 6.13];
+const hrtAvg = [18.53, 16.70, 9.30, 2.03];
+const trtMed = [9.00, 11.00, 8.00, 6.00];
+const hrtMed = [14.00, 14.00, 9.00, 2.00];
+
+new Chart(document.getElementById('convDaysChart'), {
+  type: 'line',
+  data: {
+    labels: prevMonths,
+    datasets: [
+      { label: 'TRT Avg', data: trtAvg, borderColor: '#1e8449', backgroundColor: 'rgba(52,168,83,0.1)', tension: 0.3, pointRadius: 5 },
+      { label: 'HRT Avg', data: hrtAvg, borderColor: '#1a73e8', backgroundColor: 'rgba(66,133,244,0.1)', tension: 0.3, pointRadius: 5 },
+      { label: 'TRT Median', data: trtMed, borderColor: '#1e8449', borderDash: [5,3], backgroundColor: 'transparent', tension: 0.3, pointRadius: 4 },
+      { label: 'HRT Median', data: hrtMed, borderColor: '#1a73e8', borderDash: [5,3], backgroundColor: 'transparent', tension: 0.3, pointRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+    scales: { x: { ticks: { font: { size: 10 } } }, y: { title: { display: true, text: 'Days', font: { size: 10 } }, ticks: { font: { size: 10 } } } }
+  }
+});
+
+// Chart 3: Weekly Avg Conversion Days
+const weekLabels = ['12/01','12/08','12/15','12/22','12/29','01/05','01/12','01/19','01/26','02/02','02/09'];
+const trtWeekAvg = [13.38, 15.47, -0.60, 15.16, 13.72, 10.55, 9.06, 8.80, 7.67, 6.18, 4.86];
+const hrtWeekAvg = [18.24, 18.12, 15.91, 13.12, 15.27, 11.71, 11.39, 8.40, 3.29, 2.50, 1.02];
+
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'line',
+  data: {
+    labels: weekLabels,
+    datasets: [
+      { label: 'TRT', data: trtWeekAvg, borderColor: '#1e8449', backgroundColor: 'rgba(52,168,83,0.1)', tension: 0.3, pointRadius: 4, fill: true },
+      { label: 'HRT', data: hrtWeekAvg, borderColor: '#1a73e8', backgroundColor: 'rgba(66,133,244,0.1)', tension: 0.3, pointRadius: 4, fill: true }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+    scales: {
+      x: { ticks: { font: { size: 10 } } },
+      y: { title: { display: true, text: 'Avg Days', font: { size: 10 } }, ticks: { font: { size: 10 } } }
+    }
+  }
+});
+</script>
+</body>
+</html>
