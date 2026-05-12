@@ -65,6 +65,21 @@ function parseBody(req, cb) {
 }
 
 http.createServer((req, res) => {
+  // Revenue forecast API — public, no auth needed
+  if (req.method === 'GET' && req.url === '/api/revenue-forecast') {
+    const forecast = [
+      { month: '2026-05', gross_revenue: 2149579 },
+      { month: '2026-06', gross_revenue: 2120871 },
+      { month: '2026-07', gross_revenue: 2307543 },
+    ];
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.end(JSON.stringify(forecast));
+    return;
+  }
+
   // Handle login POST
   if (req.method === 'POST' && req.url === '/auth') {
     parseBody(req, body => {
